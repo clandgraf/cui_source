@@ -10,5 +10,5 @@ setup(
     license =          "BSD",
     url =              "https://github.com/clandgraf/cui_source",
     packages =         ['cui_source'],
-    install_requires = ['pygments']
+    install_requires = ['cui', 'pygments']
 )
