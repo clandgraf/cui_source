@@ -78,7 +78,7 @@ class SourceManager(object):
 cui.def_variable(['open-files'], SourceManager())
 
 
-def read_file(path, revert=False):
+def open_file(path, revert=False):
     return cui.get_variable(['open-files']).get_file(path, revert)
 
 
@@ -94,7 +94,7 @@ class BaseFileBuffer(cui.buffers.ListBuffer):
         self._rows = []
 
     def set_file(self, file_path):
-        self._rows = read_file(file_path)
+        self._rows = open_file(file_path)
         self.set_variable(['win/buf', 'selected-item'], 0)
 
     def items(self):
@@ -161,11 +161,28 @@ class DirectoryBuffer(cui.buffers.TreeBuffer):
         return [item['name']]
 
 
+def complete_files(buffer_content):
+    basename = os.path.basename(buffer_content)
+    dirname = os.path.dirname(buffer_content)
+    matches = list(filter(lambda d: d.startswith(basename), os.listdir(dirname)))
+    prefix = os.path.commonprefix(matches)
+    result = os.path.join(dirname, prefix)
+    if len(matches) == 1 and os.path.isdir(result):
+        return os.path.join(result, '')
+    return result
+
+
+def read_file(prompt, default=None):
+    f = default or os.path.join(os.getcwd(), '')
+    while True:
+        f = cui.read_string(prompt, f, complete_files)
+        if os.path.exists(f):
+            return f
+        cui.message('File \'%s\' does not exist.' % f)
+
+
 @cui.api_fn
 @cui.global_key('C-x C-f')
-def find_file():
-    f = cui.read_string('Find file', default=os.path.join(os.getcwd(), ''))
-    if f:
-        if not os.path.exists(f):
-            cui.message('\'%s\' does not exist.' % f)
-        cui.switch_buffer(FileBuffer if os.path.isfile(f) else DirectoryBuffer, f)
+@cui.interactive(lambda: read_file('Find file'))
+def find_file(f):
+    cui.switch_buffer(FileBuffer if os.path.isfile(f) else DirectoryBuffer, f)
