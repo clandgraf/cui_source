@@ -161,15 +161,27 @@ class DirectoryBuffer(cui.buffers.TreeBuffer):
         return [item['name']]
 
 
-def complete_files(buffer_content):
-    basename = os.path.basename(buffer_content)
-    dirname = os.path.dirname(buffer_content)
-    matches = list(filter(lambda d: d.startswith(basename), os.listdir(dirname)))
-    prefix = os.path.commonprefix(matches)
-    result = os.path.join(dirname, prefix)
-    if len(matches) == 1 and os.path.isdir(result):
-        return os.path.join(result, '')
-    return result
+def complete_files(display_completions):
+    def _complete_files(buffer_content):
+        basename = os.path.basename(buffer_content)
+        dirname = os.path.dirname(buffer_content)
+        matches = list(filter(lambda d: d.startswith(basename), os.listdir(dirname)))
+        prefix = os.path.commonprefix(matches)
+        result = os.path.join(dirname, prefix)
+        if len(matches) == 0:
+            cui.message('No completions.')
+            return buffer_content
+        elif len(matches) == 1:
+            if os.path.isdir(result):
+                return os.path.join(result, '')
+        else:
+            display_completions(list(map(lambda match: [os.path.join(dirname, ''),
+                                                   {'content': match,
+                                                    'attributes': ['bold']}],
+                                         matches)))
+
+        return result
+    return _complete_files
 
 
 def read_file(prompt, default=None):
