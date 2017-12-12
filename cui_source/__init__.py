@@ -135,6 +135,7 @@ class DirectoryBuffer(cui.buffers.TreeBuffer):
                                    'has_children': os.path.isdir(os.path.join(parent, f)),
                                    'children': None},
                         files))
+
     def get_roots(self):
         if not self._roots:
             self._roots = self._create_nodes(self._path, os.listdir(self._path))
