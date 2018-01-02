@@ -32,7 +32,7 @@ def dump_json(f):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('raw', action='store_true', help='Raw output')
+    parser.add_argument('--raw', action='store_true', help='Raw output')
     parser.add_argument('file', help='File to dump')
     args = parser.parse_args()
 

@@ -4,4 +4,4 @@
 
 from cui_source.source_manager import open_file
 from cui_source.buffers import BaseFileBuffer, FileBuffer, DirectoryBuffer
-from cui_source.api import complete_files, read_file, find_file
+from cui_source.api import find_file
