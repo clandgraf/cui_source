@@ -3,10 +3,23 @@
 # found in the LICENSE file.
 
 import cui
+import functools
+import math
 import os
+
+from cui.util import pad_left
 
 from cui_source import source_manager
 from cui_source import api
+
+
+def with_current_file(fn):
+    @functools.wraps(fn)
+    @cui.with_current_buffer
+    def _fn(b):
+        return fn(b._file_path, b.get_variable(['win/buf', 'selected-item']))
+    return _fn
+
 
 class BaseFileBuffer(cui.buffers.ListBuffer):
     """
@@ -18,16 +31,33 @@ class BaseFileBuffer(cui.buffers.ListBuffer):
     def __init__(self, *args, **kwargs):
         super(BaseFileBuffer, self).__init__(*args, **kwargs)
         self._rows = []
+        self._file_path = None
+        self._annotations = None
 
     def set_file(self, file_path):
+        self._file_path = file_path
         self._rows = source_manager.open_file(file_path)
         self.set_variable(['win/buf', 'selected-item'], 0)
 
     def items(self):
         return self._rows
 
+    def on_pre_render_win(self, window):
+        first_row = window._state['first-row']
+        first_item = first_row // self._item_height
+        first_line = first_row % self._item_height
+        if first_line != 0:
+            first_item += 1
+
+        item_count = max(0, int(math.ceil((window.rows - first_line) / self._item_height)))
+        self._annotation_len, self._annotations = \
+            source_manager.get_annotations(self._file_path, first_item, item_count)
+
     def render_item(self, window, item, index):
-        return [['%%%dd' % len(str(len(self._rows))) % (index + 1), ' ', item]]
+        line_annotations = self._annotations.get(index, [])
+        return [[pad_left(self._annotation_len + 1, ''.join(line_annotations)),
+                 '%%%dd ' % len(str(len(self._rows))) % (index + 1),
+                 item]]
 
 
 class FileBuffer(BaseFileBuffer):

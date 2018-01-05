@@ -2,16 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import cui
+import collections
+
 from pygments import lex
 from pygments.lexers import get_lexer_for_filename
 from pygments.token import Token
 from pygments.util import ClassNotFound
 
-import cui
-
 from cui.util import intersperse
 
-# TODO fix escaped linebreaks
 
 token_map = {
     Token.Comment.Hashbang:        {'foreground': 'comment'},
@@ -74,18 +74,55 @@ def get_rows(file_path):
         yield row
 
 
+class AnnotationSource(object):
+    MARKER = 'X'
+
+    def handles_file(path):
+        pass
+
+    def get_annotations(path, first_line, length):
+        pass
+
+
 class _SourceManager(object):
     def __init__(self):
         self._sources = {}
+        self._annotation_sources = []
 
     def get_file(self, file_path, revert=False):
         if file_path not in self._sources or revert:
             self._sources[file_path] = list(get_rows(file_path))
         return self._sources[file_path]
 
+    def add_annotation_source(self, annotation_source):
+        self._annotation_sources.append(annotation_source)
+
+    def get_annotation_sources_for_file(self, path):
+        return (source
+                for source in self._annotation_sources
+                if source.handles_file(path))
+
+    def get_annotations(self, path, first_line, length):
+        annotation_sources = list(self.get_annotation_sources_for_file(path))
+        annotations_dict = collections.OrderedDict()
+        for source in annotation_sources:
+            for annotation in source.get_annotations(path, first_line, length):
+                if annotation not in annotations_dict:
+                    annotations_dict[annotation] = [source.MARKER]
+                else:
+                    annotations_dict[annotation].append(source.MARKER)
+        return len(annotation_sources), annotations_dict
 
 cui.def_variable(['open-files'], _SourceManager())
 
 
 def open_file(path, revert=False):
     return cui.get_variable(['open-files']).get_file(path, revert)
+
+
+def add_annotation_source(annotation_source):
+    cui.get_variable(['open-files']).add_annotation_source(annotation_source)
+
+
+def get_annotations(path, first_line, length):
+    return cui.get_variable(['open-files']).get_annotations(path, first_line, length)
