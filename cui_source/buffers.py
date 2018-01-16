@@ -16,8 +16,8 @@ from cui_source import api
 def with_current_file(fn):
     @functools.wraps(fn)
     @cui.with_current_buffer
-    def _fn(b):
-        return fn(b._file_path, b.get_variable(['win/buf', 'selected-item']))
+    def _fn(b, *args, **kwargs):
+        return fn(b._file_path, b.get_variable(['win/buf', 'selected-item']), *args, **kwargs)
     return _fn
 
 
