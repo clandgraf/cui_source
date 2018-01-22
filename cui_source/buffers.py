@@ -7,11 +7,12 @@ import functools
 import math
 import os
 
-from cui.util import pad_left
+from cui.util import pad_left, truncate_left, truncate_right
 
 from cui_source import source_manager
 from cui_source import api
 
+from .util import mode_line_file_str
 
 def with_current_file(fn):
     @functools.wraps(fn)
@@ -66,8 +67,8 @@ class FileBuffer(BaseFileBuffer):
     """
 
     @classmethod
-    def name(cls, path):
-        return path
+    def name(cls, path, mode_line_columns=None):
+        return mode_line_file_str(path, mode_line_columns=mode_line_columns)
 
     def __init__(self, path):
         super(FileBuffer, self).__init__(path)
@@ -77,7 +78,7 @@ class FileBuffer(BaseFileBuffer):
 
 class DirectoryBuffer(cui.buffers.TreeBuffer):
     @classmethod
-    def name(cls, path):
+    def name(cls, path, **kwargs):
         return path
 
     def __init__(self, path):
