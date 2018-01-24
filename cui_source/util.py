@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import os
+
 
 def mode_line_file_str(path, mode_line_columns=None):
     """
