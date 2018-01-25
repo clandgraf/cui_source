@@ -35,6 +35,13 @@ class BaseFileBuffer(cui.buffers.ListBuffer):
         self._file_path = None
         self._annotations = None
 
+    @property
+    def cwd(self):
+        if self._file_path:
+            return self._file_path if os.path.isdir(self._file_path) else \
+                os.path.dirname(self._file_path)
+        return os.getcwd()
+
     def set_file(self, file_path):
         self._file_path = file_path
         self._rows = source_manager.open_file(file_path)
