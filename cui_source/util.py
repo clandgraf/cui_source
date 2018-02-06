@@ -4,6 +4,7 @@
 
 import os
 
+from cui.util import truncate_left, truncate_right
 
 def mode_line_file_str(path, mode_line_columns=None):
     """
